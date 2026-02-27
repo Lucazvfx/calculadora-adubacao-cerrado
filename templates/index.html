@@ -245,43 +245,98 @@
         .fa, .fas, .far { margin-right: 6px; }
         
         /* Melhorias para mobile */
-        @media (max-width: 700px) {
-            header h1 { font-size: 1.8rem; }
-            header .icon-leaf, header .icon-tractor { display: none; }
-        }
-        @media (max-width: 500px) {
-            .grid {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
-            .btn {
-                padding: 12px 20px;
-                font-size: 1rem;
-                width: 100%;
-            }
-            .upload-area button {
-                width: 100%;
-                margin: 5px 0;
-            }
-            th, td {
-                padding: 8px 4px;
-                font-size: 0.85rem;
-            }
-            .upload-area input[type="file"] {
-                width: 100%;
-                padding: 12px;
-                font-size: 0.9rem;
-            }
-            .secao h2 {
-                font-size: 1.4rem;
-            }
-        }
-        
-        /* Tabelas com rolagem horizontal */
         .table-responsive {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             margin-bottom: 1rem;
+        }
+
+        @media (max-width: 700px) {
+            header h1 { font-size: 1.8rem; }
+            header .icon-leaf, header .icon-tractor { display: none; }
+            .content { padding: 20px; }
+        }
+
+        @media (max-width: 500px) {
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .form-group {
+                padding: 10px 12px;
+            }
+            .form-group label {
+                font-size: 0.8rem;
+            }
+            .form-group input, .form-group select {
+                font-size: 0.95rem;
+                padding: 6px 0 2px;
+            }
+            .btn {
+                padding: 12px 16px;
+                font-size: 1rem;
+                width: 100%;
+                margin: 5px 0;
+            }
+            .upload-area {
+                padding: 20px 15px;
+            }
+            .upload-area p {
+                font-size: 1rem;
+            }
+            .upload-area input[type="file"] {
+                width: 100%;
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+            th, td {
+                padding: 8px 4px;
+                font-size: 0.8rem;
+            }
+            .secao {
+                padding: 15px;
+            }
+            .secao h2 {
+                font-size: 1.3rem;
+            }
+            .detalhe {
+                font-size: 0.8rem;
+                padding: 6px 12px;
+            }
+            .footer {
+                font-size: 0.9rem;
+                padding: 12px;
+            }
+        }
+
+        /* Para telas muito pequenas (menos de 400px) */
+        @media (max-width: 400px) {
+            header h1 {
+                font-size: 1.5rem;
+            }
+            header p {
+                font-size: 0.9rem;
+            }
+            .content {
+                padding: 15px;
+            }
+            .form-group {
+                padding: 8px 10px;
+            }
+            .form-group label {
+                font-size: 0.75rem;
+            }
+            .form-group input, .form-group select {
+                font-size: 0.9rem;
+            }
+            th, td {
+                padding: 6px 2px;
+                font-size: 0.7rem;
+            }
+            .btn {
+                padding: 10px 12px;
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
@@ -312,7 +367,8 @@
                 <input type="file" name="arquivo" accept=".csv,.xlsx,.xls" style="margin:15px auto; background:#dacbb8; padding:12px; border-radius:40px; border:none; width:80%;">
                 <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
                     <button type="submit" name="preencher" value="1" class="btn"><i class="fas fa-upload"></i> Enviar e preencher</button>
-                   
+                    <!-- Descomente abaixo se quiser o botão de lote -->
+                    <!-- <button type="submit" name="processar_lote" value="1" class="btn btn-excel"><i class="fas fa-file-excel"></i> Processar lote</button> -->
                 </div>
             </form>
         </div>
@@ -320,20 +376,20 @@
         <!-- Formulário principal -->
         <form method="POST" id="form-principal">
             <div class="grid">
-                <div class="form-group"><label><i class="fas fa-flask"></i> pH (água)</label><input type="number" step="0.1" name="ph_h2o" value="{{ dados.ph_h2o or '' }}" required></div>
-                <div class="form-group"><label><i class="fas fa-flask"></i> P (mg/dm³)</label><input type="number" step="0.1" name="p" value="{{ dados.p or '' }}" required></div>
-                <div class="form-group"><label><i class="fas fa-flask"></i> K (mg/dm³)</label><input type="number" step="0.1" name="k" value="{{ dados.k or '' }}" required></div>
-                <div class="form-group"><label><i class="fas fa-flask"></i> Ca (cmolc/dm³)</label><input type="number" step="0.1" name="ca" value="{{ dados.ca or '' }}" required></div>
-                <div class="form-group"><label><i class="fas fa-flask"></i> Mg (cmolc/dm³)</label><input type="number" step="0.1" name="mg" value="{{ dados.mg or '' }}" required></div>
-                <div class="form-group"><label><i class="fas fa-flask"></i> Al (cmolc/dm³)</label><input type="number" step="0.1" name="al" value="{{ dados.al or '' }}" required></div>
-                <div class="form-group"><label><i class="fas fa-flask"></i> H+Al (cmolc/dm³)</label><input type="number" step="0.1" name="h_al" value="{{ dados.h_al or '' }}" required></div>
-                <div class="form-group"><label><i class="fas fa-seedling"></i> MO (g/dm³)</label><input type="number" step="0.1" name="mo" value="{{ dados.mo or '' }}" required></div>
-                <div class="form-group"><label><i class="fas fa-mountain"></i> Argila (%)</label><input type="number" step="0.1" name="argila" value="{{ dados.argila or '' }}" required></div>
-                <div class="form-group"><label><i class="fas fa-flask"></i> Zn (mg/dm³)</label><input type="number" step="0.1" name="zn" value="{{ dados.zn or '' }}"></div>
-                <div class="form-group"><label><i class="fas fa-flask"></i> Cu (mg/dm³)</label><input type="number" step="0.1" name="cu" value="{{ dados.cu or '' }}"></div>
-                <div class="form-group"><label><i class="fas fa-flask"></i> B (mg/dm³)</label><input type="number" step="0.1" name="b" value="{{ dados.b or '' }}"></div>
-                <div class="form-group"><label><i class="fas fa-flask"></i> Mn (mg/dm³)</label><input type="number" step="0.1" name="mn" value="{{ dados.mn or '' }}"></div>
-                <div class="form-group"><label><i class="fas fa-flask"></i> Fe (mg/dm³)</label><input type="number" step="0.1" name="fe" value="{{ dados.fe or '' }}"></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> pH (água)</label><input type="number" step="0.1" inputmode="decimal" name="ph_h2o" value="{{ dados.ph_h2o or '' }}" required></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> P (mg/dm³)</label><input type="number" step="0.1" inputmode="decimal" name="p" value="{{ dados.p or '' }}" required></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> K (mg/dm³)</label><input type="number" step="0.1" inputmode="decimal" name="k" value="{{ dados.k or '' }}" required></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> Ca (cmolc/dm³)</label><input type="number" step="0.1" inputmode="decimal" name="ca" value="{{ dados.ca or '' }}" required></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> Mg (cmolc/dm³)</label><input type="number" step="0.1" inputmode="decimal" name="mg" value="{{ dados.mg or '' }}" required></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> Al (cmolc/dm³)</label><input type="number" step="0.1" inputmode="decimal" name="al" value="{{ dados.al or '' }}" required></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> H+Al (cmolc/dm³)</label><input type="number" step="0.1" inputmode="decimal" name="h_al" value="{{ dados.h_al or '' }}" required></div>
+                <div class="form-group"><label><i class="fas fa-seedling"></i> MO (g/dm³)</label><input type="number" step="0.1" inputmode="decimal" name="mo" value="{{ dados.mo or '' }}" required></div>
+                <div class="form-group"><label><i class="fas fa-mountain"></i> Argila (%)</label><input type="number" step="0.1" inputmode="decimal" name="argila" value="{{ dados.argila or '' }}" required></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> Zn (mg/dm³)</label><input type="number" step="0.1" inputmode="decimal" name="zn" value="{{ dados.zn or '' }}"></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> Cu (mg/dm³)</label><input type="number" step="0.1" inputmode="decimal" name="cu" value="{{ dados.cu or '' }}"></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> B (mg/dm³)</label><input type="number" step="0.1" inputmode="decimal" name="b" value="{{ dados.b or '' }}"></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> Mn (mg/dm³)</label><input type="number" step="0.1" inputmode="decimal" name="mn" value="{{ dados.mn or '' }}"></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> Fe (mg/dm³)</label><input type="number" step="0.1" inputmode="decimal" name="fe" value="{{ dados.fe or '' }}"></div>
                 <div class="form-group"><label><i class="fas fa-tractor"></i> Cultura</label>
                     <select name="cultura">
                         <option value="milho" {% if dados and dados.cultura=='milho' %}selected{% endif %}>Milho</option>
@@ -347,10 +403,10 @@
                         <option value="irrigado" {% if dados and dados.sistema=='irrigado' %}selected{% endif %}>Irrigado</option>
                     </select>
                 </div>
-                <div class="form-group"><label><i class="fas fa-chart-line"></i> Prod. (t/ha)</label><input type="number" step="0.1" name="produtividade" value="{{ dados.produtividade or 9 }}" required></div>
-                <div class="form-group"><label><i class="fas fa-vector-square"></i> Área (ha)</label><input type="number" step="0.1" name="area" value="{{ dados.area or 10 }}"></div>
-                <div class="form-group"><label><i class="fas fa-ruler"></i> Esp. (m)</label><input type="number" step="0.05" name="espacamento" value="{{ dados.espacamento or 0.8 }}"></div>
-                <div class="form-group"><label><i class="fas fa-percent"></i> PRNT (%)</label><input type="number" step="1" name="prnt" value="{{ dados.prnt or 100 }}"></div>
+                <div class="form-group"><label><i class="fas fa-chart-line"></i> Prod. (t/ha)</label><input type="number" step="0.1" inputmode="decimal" name="produtividade" value="{{ dados.produtividade or 9 }}" required></div>
+                <div class="form-group"><label><i class="fas fa-vector-square"></i> Área (ha)</label><input type="number" step="0.1" inputmode="decimal" name="area" value="{{ dados.area or 10 }}"></div>
+                <div class="form-group"><label><i class="fas fa-ruler"></i> Esp. (m)</label><input type="number" step="0.05" inputmode="decimal" name="espacamento" value="{{ dados.espacamento or 0.8 }}"></div>
+                <div class="form-group"><label><i class="fas fa-percent"></i> PRNT (%)</label><input type="number" step="1" inputmode="numeric" name="prnt" value="{{ dados.prnt or 100 }}"></div>
                 <div class="form-group" style="grid-column:span 2;">
                     <label style="flex-direction:row; gap:10px; justify-content:center;">
                         <input type="checkbox" name="historico_soja" {% if dados and dados.historico_soja %}checked{% endif %}> <i class="fas fa-history"></i> Histórico com soja (último ano)
