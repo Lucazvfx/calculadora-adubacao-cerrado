@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Adubação - Cerrado</title>
+    <!-- Google Fonts e Font Awesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #d9c7a7; /* tom terra claro */
+            padding: 20px;
+            background-image: radial-gradient(circle at 10% 20%, rgba(180, 130, 80, 0.1) 0%, transparent 30%),
+                              linear-gradient(145deg, #e0d1b5 0%, #b8a07c 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            background: #fffaf2; /* off-white quente */
+            border-radius: 48px 48px 32px 32px;
+            box-shadow: 0 30px 50px rgba(60, 40, 20, 0.3);
+            overflow: hidden;
+            border: 1px solid #cbb99b;
+        }
+        header {
+            background: linear-gradient(135deg, #3b6e3b 0%, #1f4f1f 100%);
+            color: white;
+            padding: 30px 40px;
+            text-align: center;
+            position: relative;
+            border-bottom: 6px solid #c9a86b;
+        }
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            text-shadow: 2px 2px 0 #2d4d2d;
+        }
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+        header .icon-tractor {
+            font-size: 3rem;
+            position: absolute;
+            bottom: 10px;
+            right: 40px;
+            color: #d4b27e;
+            opacity: 0.5;
+        }
+        header .icon-leaf {
+            font-size: 3rem;
+            position: absolute;
+            top: 10px;
+            left: 40px;
+            color: #b0d68b;
+            opacity: 0.5;
+        }
+        .content {
+            padding: 40px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            background: #fcf7f0;
+            padding: 12px 15px;
+            border-radius: 28px;
+            border: 1px solid #ddd0bb;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02), 0 4px 8px rgba(100,70,30,0.1);
+            transition: 0.2s;
+        }
+        .form-group:hover {
+            border-color: #a8b87a;
+            box-shadow: 0 6px 12px rgba(120,90,40,0.15);
+        }
+        .form-group label {
+            font-weight: 500;
+            color: #4f3f2a;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .form-group input, .form-group select {
+            border: none;
+            background: transparent;
+            padding: 8px 0 4px;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #1e3c1e;
+            border-bottom: 2px dashed #c9b28b;
+            outline: none;
+            transition: 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-bottom-color: #2e7d32;
+        }
+        .upload-area {
+            background: #eee4d5;
+            border: 3px dashed #8b6f4c;
+            border-radius: 60px;
+            padding: 30px 20px;
+            text-align: center;
+            margin-bottom: 35px;
+            transition: 0.3s;
+        }
+        .upload-area:hover {
+            background: #e5d6c2;
+            border-color: #5f7e3a;
+        }
+        .upload-area p {
+            font-size: 1.2rem;
+            color: #3f3322;
+            margin-bottom: 15px;
+        }
+        .btn {
+            background: #2e5e2e;
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 10px rgba(0,40,0,0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 5px;
+        }
+        .btn i {
+            font-size: 1.2rem;
+        }
+        .btn:hover {
+            background: #1f4a1f;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(30,60,0,0.4);
+        }
+        .btn-excel {
+            background: #7b5d3b;
+        }
+        .btn-excel:hover {
+            background: #624a2f;
+        }
+        .btn-pdf {
+            background: #b3442c;
+        }
+        .btn-pdf:hover {
+            background: #8f3622;
+        }
+        .secao {
+            background: #f9f1e6;
+            border-radius: 40px;
+            padding: 25px;
+            margin: 35px 0;
+            border-left: 12px solid #3b6e3b;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+        }
+        .secao h2 {
+            color: #1f4a1f;
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.9rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 6px;
+            background: transparent;
+        }
+        th {
+            background: #4b7a4b;
+            color: white;
+            padding: 14px 8px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-radius: 30px 30px 8px 8px;
+        }
+        td {
+            background: white;
+            border: 1px solid #e2d4c2;
+            padding: 12px 8px;
+            text-align: center;
+            border-radius: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .classe-baixo { background-color: #fbe9e7; color: #bf360c; font-weight: 600; border-radius: 20px; }
+        .classe-medio { background-color: #fff8e1; color: #bf5b0c; font-weight: 600; border-radius: 20px; }
+        .classe-alto { background-color: #e8f5e9; color: #1e5a1e; font-weight: 600; border-radius: 20px; }
+        .alert {
+            padding: 16px 20px;
+            border-radius: 40px;
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+        .alert-success { background: #d4edd4; color: #1d471d; border-left: 10px solid #1d471d; }
+        .alert-danger { background: #fbe9e7; color: #a13e2b; border-left: 10px solid #a13e2b; }
+        .footer {
+            background: #cbb99b;
+            padding: 18px;
+            text-align: center;
+            color: #2e442e;
+            font-size: 1rem;
+            font-weight: 400;
+            border-top: 4px solid #a28d6d;
+        }
+        .detalhe {
+            font-size: 0.9rem;
+            color: #4d6b4d;
+            margin-top: 12px;
+            font-style: italic;
+            background: #e7dfd2;
+            padding: 8px 18px;
+            border-radius: 40px;
+            display: inline-block;
+        }
+        .fa, .fas, .far { margin-right: 6px; }
+        
+        /* Melhorias para mobile */
+        @media (max-width: 700px) {
+            header h1 { font-size: 1.8rem; }
+            header .icon-leaf, header .icon-tractor { display: none; }
+        }
+        @media (max-width: 500px) {
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .btn {
+                padding: 12px 20px;
+                font-size: 1rem;
+                width: 100%;
+            }
+            .upload-area button {
+                width: 100%;
+                margin: 5px 0;
+            }
+            th, td {
+                padding: 8px 4px;
+                font-size: 0.85rem;
+            }
+            .upload-area input[type="file"] {
+                width: 100%;
+                padding: 12px;
+                font-size: 0.9rem;
+            }
+            .secao h2 {
+                font-size: 1.4rem;
+            }
+        }
+        
+        /* Tabelas com rolagem horizontal */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <i class="fas fa-leaf icon-leaf"></i>
+        <h1><i class="fas fa-tractor"></i> Calculadora de Adubação Cerrado</h1>
+        <p>Adubação corretiva baseada em tabelas oficiais da Embrapa</p>
+        <i class="fas fa-tractor icon-tractor"></i>
+    </header>
+    <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <i class="fas fa-info-circle"></i> {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Área de upload com dois botões -->
+        <div class="upload-area">
+            <form method="POST" enctype="multipart/form-data">
+                <p><i class="fas fa-cloud-upload-alt" style="font-size:2rem; color:#6b4f2f;"></i></p>
+                <p style="font-size:1.2rem;">Carregue um arquivo CSV/Excel com os dados da análise (uma linha por amostra)</p>
+                <input type="file" name="arquivo" accept=".csv,.xlsx,.xls" style="margin:15px auto; background:#dacbb8; padding:12px; border-radius:40px; border:none; width:80%;">
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <button type="submit" name="preencher" value="1" class="btn"><i class="fas fa-upload"></i> Enviar e preencher</button>
+                    <button type="submit" name="processar_lote" value="1" class="btn btn-excel"><i class="fas fa-file-excel"></i> Processar lote</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Formulário principal -->
+        <form method="POST" id="form-principal">
+            <div class="grid">
+                <div class="form-group"><label><i class="fas fa-flask"></i> pH (água)</label><input type="number" step="0.1" name="ph_h2o" value="{{ dados.ph_h2o or '' }}" required></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> P (mg/dm³)</label><input type="number" step="0.1" name="p" value="{{ dados.p or '' }}" required></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> K (mg/dm³)</label><input type="number" step="0.1" name="k" value="{{ dados.k or '' }}" required></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> Ca (cmolc/dm³)</label><input type="number" step="0.1" name="ca" value="{{ dados.ca or '' }}" required></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> Mg (cmolc/dm³)</label><input type="number" step="0.1" name="mg" value="{{ dados.mg or '' }}" required></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> Al (cmolc/dm³)</label><input type="number" step="0.1" name="al" value="{{ dados.al or '' }}" required></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> H+Al (cmolc/dm³)</label><input type="number" step="0.1" name="h_al" value="{{ dados.h_al or '' }}" required></div>
+                <div class="form-group"><label><i class="fas fa-seedling"></i> MO (g/dm³)</label><input type="number" step="0.1" name="mo" value="{{ dados.mo or '' }}" required></div>
+                <div class="form-group"><label><i class="fas fa-mountain"></i> Argila (%)</label><input type="number" step="0.1" name="argila" value="{{ dados.argila or '' }}" required></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> Zn (mg/dm³)</label><input type="number" step="0.1" name="zn" value="{{ dados.zn or '' }}"></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> Cu (mg/dm³)</label><input type="number" step="0.1" name="cu" value="{{ dados.cu or '' }}"></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> B (mg/dm³)</label><input type="number" step="0.1" name="b" value="{{ dados.b or '' }}"></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> Mn (mg/dm³)</label><input type="number" step="0.1" name="mn" value="{{ dados.mn or '' }}"></div>
+                <div class="form-group"><label><i class="fas fa-flask"></i> Fe (mg/dm³)</label><input type="number" step="0.1" name="fe" value="{{ dados.fe or '' }}"></div>
+                <div class="form-group"><label><i class="fas fa-tractor"></i> Cultura</label>
+                    <select name="cultura">
+                        <option value="milho" {% if dados and dados.cultura=='milho' %}selected{% endif %}>Milho</option>
+                        <option value="soja" {% if dados and dados.cultura=='soja' %}selected{% endif %}>Soja</option>
+                        <option value="pastagem" {% if dados and dados.cultura=='pastagem' %}selected{% endif %}>Pastagem</option>
+                    </select>
+                </div>
+                <div class="form-group"><label><i class="fas fa-tint"></i> Sistema</label>
+                    <select name="sistema">
+                        <option value="sequeiro" {% if dados and dados.sistema=='sequeiro' %}selected{% endif %}>Sequeiro</option>
+                        <option value="irrigado" {% if dados and dados.sistema=='irrigado' %}selected{% endif %}>Irrigado</option>
+                    </select>
+                </div>
+                <div class="form-group"><label><i class="fas fa-chart-line"></i> Prod. (t/ha)</label><input type="number" step="0.1" name="produtividade" value="{{ dados.produtividade or 9 }}" required></div>
+                <div class="form-group"><label><i class="fas fa-vector-square"></i> Área (ha)</label><input type="number" step="0.1" name="area" value="{{ dados.area or 10 }}"></div>
+                <div class="form-group"><label><i class="fas fa-ruler"></i> Esp. (m)</label><input type="number" step="0.05" name="espacamento" value="{{ dados.espacamento or 0.8 }}"></div>
+                <div class="form-group"><label><i class="fas fa-percent"></i> PRNT (%)</label><input type="number" step="1" name="prnt" value="{{ dados.prnt or 100 }}"></div>
+                <div class="form-group" style="grid-column:span 2;">
+                    <label style="flex-direction:row; gap:10px; justify-content:center;">
+                        <input type="checkbox" name="historico_soja" {% if dados and dados.historico_soja %}checked{% endif %}> <i class="fas fa-history"></i> Histórico com soja (último ano)
+                    </label>
+                </div>
+            </div>
+            <button type="submit" class="btn" style="width:100%;"><i class="fas fa-calculator"></i> Calcular Recomendações</button>
+        </form>
+
+        {% if calcular %}
+        <!-- Seção de classificação -->
+        <div class="secao">
+            <h2><i class="fas fa-clipboard-list"></i> Classificação dos nutrientes</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Nutriente</th><th>Valor</th><th>Classe</th></tr></thead>
+                    <tbody>
+                        <tr><td>pH</td><td>{{ analise.ph_h2o }}</td><td class="classe-{{ classes['pH'] }}">{{ classes['pH'] }}</td></tr>
+                        <tr><td>Fósforo (P)</td><td>{{ analise.p_melich }}</td><td class="classe-{{ classes['P'] }}">{{ classes['P'] }}</td></tr>
+                        <tr><td>Potássio (K)</td><td>{{ analise.k_melich }}</td><td class="classe-{{ classes['K'] }}">{{ classes['K'] }}</td></tr>
+                        <tr><td>Cálcio (Ca)</td><td>{{ analise.ca }}</td><td class="classe-{{ classes['Ca'] }}">{{ classes['Ca'] }}</td></tr>
+                        <tr><td>Magnésio (Mg)</td><td>{{ analise.mg }}</td><td class="classe-{{ classes['Mg'] }}">{{ classes['Mg'] }}</td></tr>
+                        <tr><td>Alumínio (Al)</td><td>{{ analise.al }}</td><td class="classe-{{ classes['Al'] }}">{{ classes['Al'] }}</td></tr>
+                        <tr><td>Matéria orgânica</td><td>{{ analise.mo }}</td><td class="classe-{{ classes['MO'] }}">{{ classes['MO'] }}</td></tr>
+                        {% if analise.zn %}<tr><td>Zinco (Zn)</td><td>{{ analise.zn }}</td><td class="classe-{{ classes['Zn'] }}">{{ classes['Zn'] }}</td></tr>{% endif %}
+                        {% if analise.cu %}<tr><td>Cobre (Cu)</td><td>{{ analise.cu }}</td><td class="classe-{{ classes['Cu'] }}">{{ classes['Cu'] }}</td></tr>{% endif %}
+                        {% if analise.b %}<tr><td>Boro (B)</td><td>{{ analise.b }}</td><td class="classe-{{ classes['B'] }}">{{ classes['B'] }}</td></tr>{% endif %}
+                        {% if analise.mn %}<tr><td>Manganês (Mn)</td><td>{{ analise.mn }}</td><td class="classe-{{ classes['Mn'] }}">{{ classes['Mn'] }}</td></tr>{% endif %}
+                        {% if analise.fe %}<tr><td>Ferro (Fe)</td><td>{{ analise.fe }}</td><td class="classe-{{ classes['Fe'] }}">{{ classes['Fe'] }}</td></tr>{% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Seção de recomendações -->
+        <div class="secao">
+            <h2><i class="fas fa-flask"></i> Recomendações de adubação (kg/ha)</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Prática</th><th>Dose</th><th>Observação</th></tr></thead>
+                    <tbody>
+                        <tr><td>Calagem</td><td>{{ recomendacao.calagem_t_ha or 0 }} t/ha</td><td>V alvo = {% if cultura.value=='pastagem' %}35%{% elif sistema.value=='irrigado' %}60%{% else %}50%{% endif %}</td></tr>
+                        <tr><td>Gessagem</td><td>{{ recomendacao.gesso_kg_ha or 0 }} kg/ha</td><td>{% if recomendacao.gesso_kg_ha %}Recomendado{% else %}Não necessário (critério Al/Ca){% endif %}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="margin-top:20px;"><i class="fas fa-leaf"></i> Nutrientes essenciais</h3>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Nutriente</th><th>Dose (kg/ha)</th></tr></thead>
+                    <tbody>
+                        <tr><td>Nitrogênio (N)</td><td>{{ recomendacao.n_kg_ha or 0 }}</td></tr>
+                        <tr><td>Fósforo (P₂O₅)</td><td>{{ recomendacao.p2o5_kg_ha or 0 }}</td></tr>
+                        <tr><td>Potássio (K₂O)</td><td>{{ recomendacao.k2o_kg_ha or 0 }}</td></tr>
+                        {% for elem, dose in recomendacao.micronutrientes.items() %}
+                        <tr><td>{{ elem }}</td><td>{{ dose }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <p class="detalhe"><i class="fas fa-info-circle"></i> * As doses de P e K são as corretivas (única vez). N é fixo para milho.</p>
+
+            <h3 style="margin-top:20px;"><i class="fas fa-truck"></i> Fertilizantes sugeridos</h3>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Nutriente</th><th>Fertilizante</th><th>Dose (kg/ha)</th><th>Total para {{ area }} ha (kg)</th></tr></thead>
+                    <tbody>
+                        <tr><td>N</td><td>Ureia (45% N)</td><td>{{ fert.ureia_kg_ha }}</td><td>{{ fert.ureia_total }}</td></tr>
+                        <tr><td>P₂O₅</td><td>MAP (48% P₂O₅)</td><td>{{ fert.map_kg_ha }}</td><td>{{ fert.map_total }}</td></tr>
+                        <tr><td>K₂O</td><td>KCl (60% K₂O)</td><td>{{ fert.kcl_kg_ha }}</td><td>{{ fert.kcl_total }}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Botões de download -->
+            <div style="margin-top:30px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <a href="{{ url_for('download_excel', 
+                    ph_h2o=analise.ph_h2o,
+                    p=analise.p_melich,
+                    k=analise.k_melich,
+                    ca=analise.ca,
+                    mg=analise.mg,
+                    al=analise.al,
+                    h_al=analise.h_al,
+                    mo=analise.mo,
+                    argila=analise.argila,
+                    zn=analise.zn or '',
+                    cu=analise.cu or '',
+                    b=analise.b or '',
+                    mn=analise.mn or '',
+                    fe=analise.fe or '',
+                    s=analise.s or '',
+                    cultura=cultura.value,
+                    sistema=sistema.value,
+                    produtividade=produtividade,
+                    historico_soja=historico_soja,
+                    prnt=prnt,
+                    area=area,
+                    espacamento=espacamento) }}" class="btn btn-excel"><i class="fas fa-file-excel"></i> Baixar Excel</a>
+                
+                <a href="{{ url_for('gerar_pdf', 
+                    ph_h2o=analise.ph_h2o,
+                    p=analise.p_melich,
+                    k=analise.k_melich,
+                    ca=analise.ca,
+                    mg=analise.mg,
+                    al=analise.al,
+                    h_al=analise.h_al,
+                    mo=analise.mo,
+                    argila=analise.argila,
+                    zn=analise.zn or '',
+                    cu=analise.cu or '',
+                    b=analise.b or '',
+                    mn=analise.mn or '',
+                    fe=analise.fe or '',
+                    s=analise.s or '',
+                    cultura=cultura.value,
+                    sistema=sistema.value,
+                    produtividade=produtividade,
+                    historico_soja=historico_soja,
+                    prnt=prnt,
+                    area=area,
+                    espacamento=espacamento) }}" class="btn btn-pdf"><i class="fas fa-file-pdf"></i> Baixar PDF</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    <footer class="footer">
+        <i class="fas fa-copyright"></i> Fonte: Embrapa Cerrados (2004) e tabelas fornecidas • Desenvolvido por Lucas
+    </footer>
+</div>
+</body>
+</html>

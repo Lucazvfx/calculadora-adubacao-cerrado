@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório Técnico - Adubação</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        h1 {
+            color: #2e5e2e;
+            border-bottom: 2px solid #2e5e2e;
+            padding-bottom: 5px;
+        }
+        h2 {
+            color: #1f4a1f;
+            margin-top: 25px;
+            font-size: 16px;
+            border-left: 5px solid #1f4a1f;
+            padding-left: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th {
+            background-color: #4b7a4b;
+            color: white;
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+        td {
+            border: 1px solid #ccc;
+            padding: 6px;
+        }
+        .classe-baixo { color: #bf360c; font-weight: bold; }
+        .classe-medio { color: #bf5b0c; font-weight: bold; }
+        .classe-alto { color: #1e5a1e; font-weight: bold; }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+        }
+        .assinatura {
+            margin-top: 40px;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <h1>📄 RELATÓRIO TÉCNICO DE RECOMENDAÇÃO DE ADUBAÇÃO</h1>
+    
+    <p><strong>Cultura:</strong> {{ cultura.value|capitalize }}</p>
+    <p><strong>Sistema de cultivo:</strong> {{ sistema.value|capitalize }}</p>
+    <p><strong>Produtividade esperada:</strong> {{ produtividade }} t/ha</p>
+    <p><strong>Área total:</strong> {{ area }} ha</p>
+    <p><strong>Espaçamento:</strong> {{ espacamento }} m</p>
+    <p><strong>Data:</strong> {{ now.strftime('%d/%m/%Y') }}</p>
+
+    <h2>1. RESULTADOS DA ANÁLISE DE SOLO (0–20 cm)</h2>
+    <table>
+        <tr><th>Parâmetro</th><th>Valor</th><th>Unidade</th></tr>
+        <tr><td>pH (água)</td><td>{{ analise.ph_h2o }}</td><td>-</td></tr>
+        <tr><td>Fósforo (P)</td><td>{{ analise.p_melich }}</td><td>mg/dm³</td></tr>
+        <tr><td>Potássio (K)</td><td>{{ analise.k_melich }}</td><td>mg/dm³</td></tr>
+        <tr><td>Cálcio (Ca)</td><td>{{ analise.ca }}</td><td>cmolc/dm³</td></tr>
+        <tr><td>Magnésio (Mg)</td><td>{{ analise.mg }}</td><td>cmolc/dm³</td></tr>
+        <tr><td>Alumínio (Al)</td><td>{{ analise.al }}</td><td>cmolc/dm³</td></tr>
+        <tr><td>H+Al</td><td>{{ analise.h_al }}</td><td>cmolc/dm³</td></tr>
+        <tr><td>Matéria orgânica</td><td>{{ analise.mo }}</td><td>g/dm³</td></tr>
+        <tr><td>Argila</td><td>{{ analise.argila }}</td><td>%</td></tr>
+        <tr><td>CTC</td><td>{{ analise.ctc|round(2) }}</td><td>cmolc/dm³</td></tr>
+        <tr><td>Zinco (Zn)</td><td>{{ analise.zn }}</td><td>mg/dm³</td></tr>
+        <tr><td>Cobre (Cu)</td><td>{{ analise.cu }}</td><td>mg/dm³</td></tr>
+        <tr><td>Boro (B)</td><td>{{ analise.b }}</td><td>mg/dm³</td></tr>
+        <tr><td>Manganês (Mn)</td><td>{{ analise.mn }}</td><td>mg/dm³</td></tr>
+        <tr><td>Ferro (Fe)</td><td>{{ analise.fe }}</td><td>mg/dm³</td></tr>
+        <tr><td>Enxofre (S)</td><td>{{ analise.s }}</td><td>mg/dm³</td></tr>
+    </table>
+
+    <h2>2. INTERPRETAÇÃO DA FERTILIDADE</h2>
+    <table>
+        <tr><th>Nutriente</th><th>Classe</th></tr>
+        <tr><td>pH</td><td class="classe-{{ classes['pH'] }}">{{ classes['pH'] }}</td></tr>
+        <tr><td>Fósforo (P)</td><td class="classe-{{ classes['P'] }}">{{ classes['P'] }}</td></tr>
+        <tr><td>Potássio (K)</td><td class="classe-{{ classes['K'] }}">{{ classes['K'] }}</td></tr>
+        <tr><td>Cálcio (Ca)</td><td class="classe-{{ classes['Ca'] }}">{{ classes['Ca'] }}</td></tr>
+        <tr><td>Magnésio (Mg)</td><td class="classe-{{ classes['Mg'] }}">{{ classes['Mg'] }}</td></tr>
+        <tr><td>Alumínio (Al)</td><td class="classe-{{ classes['Al'] }}">{{ classes['Al'] }}</td></tr>
+        <tr><td>Matéria orgânica</td><td class="classe-{{ classes['MO'] }}">{{ classes['MO'] }}</td></tr>
+        <tr><td>Zinco (Zn)</td><td class="classe-{{ classes['Zn'] }}">{{ classes['Zn'] }}</td></tr>
+        <tr><td>Cobre (Cu)</td><td class="classe-{{ classes['Cu'] }}">{{ classes['Cu'] }}</td></tr>
+        <tr><td>Boro (B)</td><td class="classe-{{ classes['B'] }}">{{ classes['B'] }}</td></tr>
+        <tr><td>Manganês (Mn)</td><td class="classe-{{ classes['Mn'] }}">{{ classes['Mn'] }}</td></tr>
+        <tr><td>Ferro (Fe)</td><td class="classe-{{ classes['Fe'] }}">{{ classes['Fe'] }}</td></tr>
+        <tr><td>Enxofre (S)</td><td class="classe-{{ classes['S'] }}">{{ classes['S'] }}</td></tr>
+    </table>
+
+    <h2>3. RECOMENDAÇÕES DE CORREÇÃO</h2>
+    <p><strong>Calagem:</strong> {{ recomendacao.calagem_t_ha or 0 }} t/ha (V alvo = {% if cultura.value=='pastagem' %}35%{% elif sistema.value=='irrigado' %}60%{% else %}50%{% endif %})</p>
+    <p><strong>Gessagem:</strong> {{ recomendacao.gesso_kg_ha or 0 }} kg/ha ({% if recomendacao.gesso_kg_ha %}Recomendado{% else %}Não necessário{% endif %})</p>
+
+    <h2>4. RECOMENDAÇÕES DE ADUBAÇÃO NPK</h2>
+    <table>
+        <tr><th>Nutriente</th><th>Dose (kg/ha)</th></tr>
+        <tr><td>Nitrogênio (N)</td><td>{{ recomendacao.n_kg_ha or 0 }}</td></tr>
+        <tr><td>Fósforo (P₂O₅)</td><td>{{ recomendacao.p2o5_kg_ha or 0 }}</td></tr>
+        <tr><td>Potássio (K₂O)</td><td>{{ recomendacao.k2o_kg_ha or 0 }}</td></tr>
+        {% for elem, dose in recomendacao.micronutrientes.items() %}
+        <tr><td>{{ elem }}</td><td>{{ dose }}</td></tr>
+        {% endfor %}
+    </table>
+
+    <h2>5. FERTILIZANTES SUGERIDOS</h2>
+    <table>
+        <tr><th>Nutriente</th><th>Fertilizante</th><th>Dose (kg/ha)</th><th>Total para {{ area }} ha (kg)</th></tr>
+        <tr><td>N</td><td>Ureia (45% N)</td><td>{{ fert.ureia_kg_ha }}</td><td>{{ fert.ureia_total }}</td></tr>
+        <tr><td>P₂O₅</td><td>MAP (48% P₂O₅)</td><td>{{ fert.map_kg_ha }}</td><td>{{ fert.map_total }}</td></tr>
+        <tr><td>K₂O</td><td>KCl (60% K₂O)</td><td>{{ fert.kcl_kg_ha }}</td><td>{{ fert.kcl_total }}</td></tr>
+    </table>
+
+    <div class="assinatura">
+        <p>Responsável técnico: ______________________________________</p>
+        <p>Registro profissional: ____________________________________</p>
+        <p>Data: ___/___/______</p>
+    </div>
+
+    <div class="footer">
+        Fonte: Embrapa Cerrados (2004) • Relatório gerado em {{ now.strftime('%d/%m/%Y %H:%M') }}
+    </div>
+</body>
+</html>
