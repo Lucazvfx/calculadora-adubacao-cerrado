@@ -83,9 +83,9 @@
     <p><strong>Sistema de cultivo:</strong> {{ sistema.value|capitalize }}</p>
     <p><strong>Produtividade esperada:</strong> {{ produtividade }} t/ha</p>
     <p><strong>Área total:</strong> {{ area }} ha</p>
-    <p><strong>Data:</strong> {{ now.strftime('%d/%m/%Y') }}</p>
 
-    <h2>1. RESULTADOS DA ANÁLISE DE SOLO (0–20 cm)</h2>
+
+    <h2>1. RESULTADOS DA ANÁLISE DE SOLO </h2>
     <table>
         <tr><th>Parâmetro</th><th>Valor</th><th>Unidade</th></tr>
         <tr><td>pH (água)</td><td>{{ analise.ph_h2o }}</td><td>-</td></tr>
@@ -182,7 +182,7 @@
 
     <!-- Log de decisão (detalhamento técnico) -->
     {% if recomendacao.log and recomendacao.log|length > 0 %}
-    <h2>6. DETALHAMENTO DO CÁLCULO (LOG DE DECISÃO)</h2>
+    <h2>6. DETALHAMENTO DO CÁLCULO</h2>
     <div class="log">
         {% for linha in recomendacao.log %}
             {{ linha }}<br>
@@ -198,7 +198,7 @@
 
     <div class="footer">
         Fonte: Embrapa Cerrados (2004) • Metodologia: {{ config.METODOLOGIA.metodologia_ativa if config.METODOLOGIA else 'Embrapa Cerrados' }}<br>
-        Relatório gerado em {{ now.strftime('%d/%m/%Y %H:%M') }}
+
     </div>
 </body>
 </html>
