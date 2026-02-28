@@ -208,6 +208,21 @@
             </form>
         </div>
 
+        <!-- MODO 3: Recomendação automática (baseada em P) -->
+        <div class="secao">
+            <h2><i class="fas fa-magic"></i> 3. Recomendar adubação comercial (Cerrado)</h2>
+            <form method="POST">
+                <div class="grid">
+                    <div class="form-group"><label>N necessário (kg/ha)</label><input type="number" step="0.1" name="n_nec" required></div>
+                    <div class="form-group"><label>P₂O₅ necessário (kg/ha)</label><input type="number" step="0.1" name="p_nec" required></div>
+                    <div class="form-group"><label>K₂O necessário (kg/ha)</label><input type="number" step="0.1" name="k_nec" required></div>
+                </div>
+                <button type="submit" name="recomendar" value="1" class="btn btn-secondary">
+                    <i class="fas fa-seedling"></i> Recomendar
+                </button>
+            </form>
+        </div>
+
         {% if resultado %}
         <div class="secao">
             <h2><i class="fas fa-check-circle"></i> Resultado</h2>
@@ -233,6 +248,20 @@
                     <tr><td>Ureia</td><td>{{ resultado.ureia_kg }} kg/ha</td></tr>
                     <tr><td>MAP</td><td>{{ resultado.map_kg }} kg/ha</td></tr>
                     <tr><td>KCl</td><td>{{ resultado.kcl_kg }} kg/ha</td></tr>
+                {% elif resultado.modo == 'recomendacao' %}
+                    <tr><th colspan="2">Recomendação de adubação (Cerrado)</th></tr>
+                    <tr><td>Formulado escolhido</td><td>{{ resultado.formulado.nome }} ({{ resultado.formulado.quantidade_kg_ha }} kg/ha)</td></tr>
+                    <tr><td>N do formulado</td><td>{{ resultado.formulado.n }} kg/ha</td></tr>
+                    <tr><td>P₂O₅ do formulado</td><td>{{ resultado.formulado.p2o5 }} kg/ha</td></tr>
+                    <tr><td>K₂O do formulado</td><td>{{ resultado.formulado.k2o }} kg/ha</td></tr>
+                    {% if resultado.complementos %}
+                        <tr><td colspan="2" style="background:#e8f5e9;">Complementos:</td></tr>
+                        {% for comp in resultado.complementos %}
+                        <tr><td>{{ comp.adubo }}</td><td>{{ comp.quantidade_kg_ha }} kg/ha (N: {{ comp.n }}, K: {{ comp.k }})</td></tr>
+                        {% endfor %}
+                    {% endif %}
+                    <tr><td>Totais atingidos</td><td>N: {{ resultado.totais.n }} | P₂O₅: {{ resultado.totais.p2o5 }} | K₂O: {{ resultado.totais.k2o }}</td></tr>
+                    <tr><td>Desvio (N+K)</td><td>{{ resultado.desvio }} kg/ha</td></tr>
                 {% endif %}
                 </tbody>
             </table>

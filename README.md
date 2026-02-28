@@ -8,6 +8,7 @@ Pacote Python para cálculo de recomendação de adubação para as culturas de 
 pip install -r requirements.txt
 python app.py
 .\venv\Scripts\activate
+git add .
 git add templates/index.html
-git push origin main
 git commit -m "atualizaçao"
+git push origin main

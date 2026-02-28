@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, send_file, flash, redirect, u
 import pandas as pd
 import io
 import os
+import json
 import logging
 from datetime import datetime
 from weasyprint import HTML
@@ -22,6 +23,10 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.secret_key = 'chave-secreta-para-flash'
+
+# Carregar base de fertilizantes
+with open('fertilizantes.json', 'r', encoding='utf-8') as f:
+    FERTILIZANTES_DB = json.load(f)
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'csv', 'xlsx', 'xls'}
@@ -237,6 +242,92 @@ def to_float(value, default=0.0):
     except:
         return default
 
+# ===================== NOVA FUNÇÃO DE RECOMENDAÇÃO =====================
+def recomendar_adubacao_plantio(n_nec, p_nec, k_nec, limite_kg_ha=600):
+    """
+    Recomenda um formulado para suprir P e depois complementa N e K com adubos simples.
+    Retorna um dicionário com a recomendação completa ou None se não encontrar opção viável.
+    """
+    formulados = FERTILIZANTES_DB['adubos_plantio_npk']
+    simples = {s['nome']: s for s in FERTILIZANTES_DB['adubos_simples_correcao']}
+
+    melhor_opcao = None
+    menor_desvio_apos_complemento = float('inf')
+    receita_final = None
+
+    for adubo in formulados:
+        # Quantidade para suprir P (limitada pelo máximo)
+        qtd_base = (p_nec / adubo['p2o5']) * 100
+        if qtd_base > limite_kg_ha:
+            continue  # ultrapassa o limite, inviável
+
+        # Nutrientes fornecidos pelo formulado
+        n_fornecido = (qtd_base * adubo['n']) / 100
+        k_fornecido = (qtd_base * adubo['k2o']) / 100
+
+        # Calcular déficits de N e K
+        deficit_n = max(0, n_nec - n_fornecido)
+        deficit_k = max(0, k_nec - k_fornecido)
+
+        complementos = []
+        n_complementar = 0
+        k_complementar = 0
+
+        # Complementar N com ureia (45% N)
+        if deficit_n > 0:
+            ureia = simples.get('Ureia')
+            if ureia:
+                qtd_ureia = (deficit_n / ureia['n']) * 100
+                complementos.append({
+                    'adubo': 'Ureia',
+                    'quantidade_kg_ha': round(qtd_ureia, 1),
+                    'n': round((qtd_ureia * ureia['n'])/100, 1),
+                    'k': 0
+                })
+                n_complementar = (qtd_ureia * ureia['n']) / 100
+
+        # Complementar K com KCl (60% K2O)
+        if deficit_k > 0:
+            kcl = simples.get('Cloreto de Potássio (KCl)')
+            if kcl:
+                qtd_kcl = (deficit_k / kcl['k2o']) * 100
+                complementos.append({
+                    'adubo': 'KCl',
+                    'quantidade_kg_ha': round(qtd_kcl, 1),
+                    'n': 0,
+                    'k': round((qtd_kcl * kcl['k2o'])/100, 1)
+                })
+                k_complementar = (qtd_kcl * kcl['k2o']) / 100
+
+        # Totais finais
+        n_total = n_fornecido + n_complementar
+        p_total = p_nec  # exato por construção
+        k_total = k_fornecido + k_complementar
+
+        desvio = abs(n_nec - n_total) + abs(k_nec - k_total)
+
+        if desvio < menor_desvio_apos_complemento:
+            menor_desvio_apos_complemento = desvio
+            receita_final = {
+                'formulado': {
+                    'nome': adubo['nome'],
+                    'quantidade_kg_ha': round(qtd_base, 0),
+                    'n': round(n_fornecido, 1),
+                    'p2o5': round((qtd_base * adubo['p2o5'])/100, 1),
+                    'k2o': round(k_fornecido, 1)
+                },
+                'complementos': complementos,
+                'totais': {
+                    'n': round(n_total, 1),
+                    'p2o5': round(p_total, 1),
+                    'k2o': round(k_total, 1)
+                },
+                'desvio': round(desvio, 1)
+            }
+
+    return receita_final
+
+# ===================== ROTA PRINCIPAL =====================
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
@@ -449,6 +540,7 @@ def gerar_pdf():
         logger.exception("Erro ao gerar PDF")
         return f"Erro ao gerar PDF: {e}", 400
 
+# ===================== ROTA DE FORMULAÇÃO (ATUALIZADA) =====================
 @app.route('/formulacao', methods=['GET', 'POST'])
 def formulacao():
     resultado = None
@@ -460,7 +552,27 @@ def formulacao():
                 'map_p2o5': config.FERTILIZANTES['MAP']['P2O5'] / 100,
                 'kcl': config.FERTILIZANTES['KCl']['K2O'] / 100,
             }
-            if 'calcular_quantidades' in request.form:
+
+            # MODO 3: Recomendação automática (Cerrado)
+            if 'recomendar' in request.form:
+                n_nec = to_float(request.form.get('n_nec'))
+                p_nec = to_float(request.form.get('p_nec'))
+                k_nec = to_float(request.form.get('k_nec'))
+                limite = to_float(request.form.get('limite_kg'), 600)
+
+                if n_nec == 0 and p_nec == 0 and k_nec == 0:
+                    flash('Preencha pelo menos uma necessidade.', 'danger')
+                    return redirect(url_for('formulacao'))
+
+                recomendacao = recomendar_adubacao_plantio(n_nec, p_nec, k_nec, limite)
+                if not recomendacao:
+                    flash('Nenhuma recomendação viável encontrada. Tente aumentar o limite de kg/ha.', 'warning')
+                    return redirect(url_for('formulacao'))
+
+                resultado = {'modo': 'recomendacao', **recomendacao}
+
+            # MODO 1: Calcular quantidades
+            elif 'calcular_quantidades' in request.form:
                 n_necessario = to_float(request.form.get('n_necessario'))
                 p2o5_necessario = to_float(request.form.get('p2o5_necessario'))
                 k2o_necessario = to_float(request.form.get('k2o_necessario'))
@@ -491,6 +603,8 @@ def formulacao():
                     'p2o5_total': round(map_kg * teores['map_p2o5'], 2),
                     'k2o_total': round(kcl_kg * teores['kcl'], 2),
                 }
+
+            # MODO 2: Calcular fórmula
             elif 'calcular_formula' in request.form:
                 ureia_kg = to_float(request.form.get('ureia_kg'))
                 map_kg = to_float(request.form.get('map_kg'))
@@ -518,10 +632,12 @@ def formulacao():
                     'map_kg': round(map_kg, 2),
                     'kcl_kg': round(kcl_kg, 2),
                 }
+
         except Exception as e:
             logger.exception("Erro na formulação")
             flash(f'Erro no cálculo: {e}', 'danger')
             return redirect(url_for('formulacao'))
+
     return render_template('formulacao.html', resultado=resultado)
 
 if __name__ == '__main__':

@@ -1,0 +1,20 @@
+{
+  "adubos_plantio_npk": [
+    { "id": 1, "nome": "04-14-08", "n": 4, "p2o5": 14, "k2o": 8, "tipo": "Standard" },
+    { "id": 2, "nome": "05-25-15", "n": 5, "p2o5": 25, "k2o": 15, "tipo": "Alta Concentração" },
+    { "id": 3, "nome": "08-28-16", "n": 8, "p2o5": 28, "k2o": 16, "tipo": "Cereais" },
+    { "id": 4, "nome": "02-20-20", "n": 2, "p2o5": 20, "k2o": 20, "tipo": "Equilibrado K" },
+    { "id": 5, "nome": "10-10-10", "n": 10, "p2o5": 10, "k2o": 10, "tipo": "Manutenção" },
+    { "id": 6, "nome": "00-20-20", "n": 0, "p2o5": 20, "k2o": 20, "tipo": "PK Solo Rico N" },
+    { "id": 7, "nome": "04-30-10", "n": 4, "p2o5": 30, "k2o": 10, "tipo": "Fosfatado" },
+    { "id": 8, "nome": "06-24-12", "n": 6, "p2o5": 24, "k2o": 12, "tipo": "Multiculturas" }
+  ],
+  "adubos_simples_correcao": [
+    { "id": 101, "nome": "MAP", "n": 11, "p2o5": 52, "k2o": 0 },
+    { "id": 102, "nome": "Super Simples", "n": 0, "p2o5": 18, "k2o": 0, "s": 10, "ca": 18 },
+    { "id": 103, "nome": "Super Triplo", "n": 0, "p2o5": 46, "k2o": 0, "ca": 12 },
+    { "id": 104, "nome": "Cloreto de Potássio (KCl)", "n": 0, "p2o5": 0, "k2o": 60 },
+    { "id": 105, "nome": "Ureia", "n": 45, "p2o5": 0, "k2o": 0 },
+    { "id": 106, "nome": "Sulfato de Amônio", "n": 21, "p2o5": 0, "k2o": 0, "s": 24 }
+  ]
+}
