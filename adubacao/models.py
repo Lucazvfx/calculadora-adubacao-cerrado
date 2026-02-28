@@ -1,6 +1,5 @@
-# adubacao/models.py
 from dataclasses import dataclass, field
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 from enum import Enum
 
 class Cultura(Enum):
@@ -54,6 +53,7 @@ class Recomendacao:
     p2o5_kg_ha: Optional[float] = None
     k2o_kg_ha: Optional[float] = None
     micronutrientes: Dict[str, float] = field(default_factory=dict)
+    log: List[str] = field(default_factory=list)  # <-- NOVO CAMPO
 
     @property
     def n_total(self) -> float:
@@ -74,5 +74,6 @@ class Recomendacao:
             'n_kg_ha': self.n_kg_ha,
             'p2o5_kg_ha': self.p2o5_kg_ha,
             'k2o_kg_ha': self.k2o_kg_ha,
+            'log': self.log,
             **self.micronutrientes
         }

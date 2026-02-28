@@ -1,14 +1,14 @@
 # adubacao/config.py
-# Tabelas de referência baseadas no manual da Embrapa Cerrados (2004) e suas tabelas
+# Tabelas de referência baseadas no manual da Embrapa Cerrados (2004)
 
 # ============================================
-# INTERPRETAÇÃO DE FÓSFORO (Mehlich-1) - Tabela 3
+# INTERPRETAÇÃO DE FÓSFORO (Mehlich-1) - Tabela 3 (p. 154)
 # ============================================
 LIMITES_P = [
-    (0, 15, 6.0, 12.0, 18.0, float('inf')),
-    (16, 35, 5.0, 10.0, 15.0, float('inf')),
-    (36, 60, 3.0, 5.0, 8.0, float('inf')),
-    (61, 100, 2.0, 3.0, 4.0, float('inf')),
+    (0, 15, 6.0, 12.0, 18.0, 25.0),          # argila ≤15%
+    (16, 35, 4.0, 8.0, 12.0, 18.0),          # argila 16–35%
+    (36, 60, 3.0, 6.0, 9.0, 13.0),            # argila 36–60%
+    (61, 100, 2.0, 4.0, 6.0, 9.0),             # argila >60%
 ]
 
 # ============================================
@@ -29,11 +29,10 @@ DOSE_P_CORRETIVO_IRRIGADO = {
 }
 
 # ============================================
-# INTERPRETAÇÃO DE POTÁSSIO - Tabela fornecida
+# INTERPRETAÇÃO DE POTÁSSIO - Tabela 5 (p. 181) [valores em mg/dm³]
 # ============================================
 LIMITES_K = [
-    (0, 4, 15, 30, 40, float('inf')),
-    (4, float('inf'), 25, 50, 80, float('inf')),
+    (0, float('inf'), 15, 30, 50, 80),        # usado apenas para compatibilidade; a classificação agora é baseada em níveis fixos
 ]
 
 DOSE_K_CORRETIVO = [
@@ -47,16 +46,17 @@ DOSE_K_CORRETIVO = [
     (4, float('inf'), 'Alto', 0),
 ]
 
+
 # ============================================
-# MICRONUTRIENTES - Suas tabelas
+# MICRONUTRIENTES
 # ============================================
 LIMITES_MICRO = {
-    'Zn': {'baixo': 1.0, 'medio': 1.6},   # Baixo <1.0, Médio 1.1-1.6, Alto >1.6
-    'Cu': {'baixo': 0.4, 'medio': 0.8},   # Baixo <0.4, Médio 0.5-0.8, Alto >0.8
-    'B': {'baixo': 0.2, 'medio': 0.5},    # Baixo <0.2, Médio 0.3-0.5, Alto >0.5
-    'Mn': {'baixo': 1.9, 'medio': 5.0},   # Baixo <1.9, Médio 2.0-5.0, Alto >5.0
-    'Fe': {'baixo': 10, 'medio': 20},     # Ajuste se necessário
-    'S': {'baixo': 5, 'medio': 10},       # Exemplo: Baixo <5, Médio 5-10, Alto >10
+    'Zn': {'baixo': 1.0, 'medio': 1.6},
+    'Cu': {'baixo': 0.4, 'medio': 0.8},
+    'B': {'baixo': 0.2, 'medio': 0.5},
+    'Mn': {'baixo': 1.9, 'medio': 5.0},
+    'Fe': {'baixo': 10, 'medio': 20},
+    'S': {'baixo': 4.0, 'medio': 10.0},   # baixo <4, médio 4–10, alto >10
 }
 
 REC_MICRO = {
@@ -69,9 +69,56 @@ REC_MICRO = {
 }
 
 # ============================================
-# NITROGÊNIO - Valor fixo (pode ser alterado)
+# ALVOS DE SATURAÇÃO POR BASES (V2) PARA CALAGEM
 # ============================================
-N_FIXO_MILHO = 170
+V2_PASTAGEM_EXIGENTE = 45
+V2_PASTAGEM_POUCO_EXIGENTE = 30
+V2_PASTAGEM_PADRAO = 35
+MG_MINIMO_RECOMENDADO = 0.5
+
+# ============================================
+# EXTRAÇÃO E EXPORTAÇÃO DE NUTRIENTES
+# ============================================
+EXPORTACAO_K2O = {
+    'milho': 6.0,
+    'soja': 20.0,
+    'feijao': 14.0,
+    'arroz': 3.0,
+}
+
+FATOR_K_MANUTENCAO = {
+    'Muito baixo': 1.0,
+    'Baixo': 1.0,
+    'Médio': 1.0,
+    'Adequado': 1.0,
+    'Alto': 0.5,
+}
+
+# Parâmetros para N (milho)
+N_PLANTIO_MILHO = 20
+REQUERIMENTO_N_POR_TONELADA = 20
+N_MINERALIZADO_MO = 30
+FATOR_SOJA_HISTORICO = 0.6
+FATOR_PLANTIO_DIRETO = 1.2
+
+# ============================================
+# CONFIGURAÇÕES DE METODOLOGIA (baseadas no JSON fornecido)
+# ============================================
+METODOLOGIA = {
+    "metodologia_ativa": "Embrapa_Cerrado_2017",
+    "parametros_globais": {
+        "arredondamento_doses": 0.1,
+        "limite_maximo_p2o5_sulco": 120,
+        "limite_maximo_k2o_sulco": 60,
+        "considerar_mo_no_nitrogenio": True,
+        "fator_eficiencia_n": 1.33
+    },
+    "preferencias_exibicao": {
+        "unidade_area": "hectare",
+        "exibir_recomendacao_em": "kg_nutriente_ha",
+        "sugerir_formulados_comerciais": True
+    }
+}
 
 # ============================================
 # FERTILIZANTES

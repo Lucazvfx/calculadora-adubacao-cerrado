@@ -2,9 +2,11 @@ from flask import Flask, render_template, request, send_file, flash, redirect, u
 import pandas as pd
 import io
 import os
+import logging
 from datetime import datetime
 from weasyprint import HTML
 
+from adubacao import config
 from adubacao.models import AnaliseSolo, Cultura, Sistema
 from adubacao.calculators import recomendar_tudo
 from adubacao.interpretation import (
@@ -15,6 +17,9 @@ from adubacao.interpretation import (
 )
 from adubacao.exporters import gerar_excel_bytes
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 app = Flask(__name__)
 app.secret_key = 'chave-secreta-para-flash'
 
@@ -23,23 +28,13 @@ ALLOWED_EXTENSIONS = {'csv', 'xlsx', 'xls'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-
 def read_csv_robust(file):
-    """Tenta ler CSV com diferentes separadores e decimais."""
     content = file.read()
     file.seek(0)
-
-    attempts = [
-        (',', '.'),   # vírgula como separador, ponto decimal
-        (';', ','),   # ponto e vírgula como separador, vírgula decimal
-        ('\t', '.'),  # tab como separador, ponto decimal
-        (',', ','),   # vírgula como separador e decimal (caso incomum)
-    ]
-
+    attempts = [ (',', '.'), (';', ','), ('\t', '.'), (',', ',') ]
     from io import StringIO
     for sep, decimal in attempts:
         try:
@@ -55,9 +50,7 @@ def read_csv_robust(file):
             continue
     raise ValueError("Não foi possível ler o arquivo CSV. Verifique o formato e encoding.")
 
-
 def parse_upload_first_line(file):
-    """Lê a primeira linha do arquivo e retorna um dicionário com os dados (para preencher o formulário)."""
     ext = file.filename.rsplit('.', 1)[1].lower()
     try:
         if ext == 'csv':
@@ -66,12 +59,9 @@ def parse_upload_first_line(file):
             df = pd.read_excel(file)
     except Exception as e:
         raise ValueError(f"Erro ao ler arquivo: {e}")
-
     if df.empty:
         return {}
-
     data = df.iloc[0].to_dict()
-
     synonyms = {
         'ph_h2o': ['ph', 'ph agua', 'ph água', 'ph_h2o', 'ph_cacl2'],
         'p': ['p', 'fosforo', 'fósforo', 'p_melich'],
@@ -89,12 +79,10 @@ def parse_upload_first_line(file):
         'fe': ['fe', 'ferro'],
         's': ['s', 'enxofre'],
     }
-
     mapping = {}
     for field, names in synonyms.items():
         for name in names:
             mapping[name] = field
-
     clean = {}
     for col_name, value in data.items():
         normalized = col_name.strip().lower()
@@ -107,7 +95,6 @@ def parse_upload_first_line(file):
                 field = mapping[simple]
             else:
                 field = normalized
-
         try:
             if isinstance(value, str):
                 value = value.replace(',', '.').strip()
@@ -119,20 +106,14 @@ def parse_upload_first_line(file):
                 val = value
         except:
             val = value
-
         clean[field] = val
-
-    # Valores padrão para cultura e sistema (caso não existam no arquivo)
     if 'cultura' not in clean:
         clean['cultura'] = 'milho'
     if 'sistema' not in clean:
         clean['sistema'] = 'sequeiro'
-
     return clean
 
-
 def processar_lote(file):
-    """Processa todas as linhas do arquivo e retorna um Excel com as recomendações."""
     ext = file.filename.rsplit('.', 1)[1].lower()
     try:
         if ext == 'csv':
@@ -141,7 +122,6 @@ def processar_lote(file):
             df = pd.read_excel(file)
     except Exception as e:
         raise ValueError(f"Erro ao ler arquivo: {e}")
-
     synonyms = {
         'ph_h2o': ['ph', 'ph agua', 'ph água', 'ph_h2o', 'ph_cacl2'],
         'p': ['p', 'fosforo', 'fósforo', 'p_melich'],
@@ -159,12 +139,10 @@ def processar_lote(file):
         'fe': ['fe', 'ferro'],
         's': ['s', 'enxofre'],
     }
-
     mapping = {}
     for field, names in synonyms.items():
         for name in names:
             mapping[name] = field
-
     resultados = []
     for idx, row in df.iterrows():
         dados_linha = row.to_dict()
@@ -180,7 +158,6 @@ def processar_lote(file):
                     field = mapping[simple]
                 else:
                     field = normalized
-
             try:
                 if pd.isna(value):
                     val = None
@@ -188,17 +165,12 @@ def processar_lote(file):
                     val = float(str(value).replace(',', '.'))
             except:
                 val = value
-
             clean[field] = val
-
-        # Valores padrão (podem vir do formulário ou de colunas)
         cultura = Cultura.MILHO
         sistema = Sistema.SEQUEIRO
         produtividade = 9
         historico_soja = False
         prnt = 100
-
-        # Se houver colunas específicas, usa
         if 'cultura' in clean and clean['cultura'] in ['milho', 'soja', 'pastagem']:
             cultura = Cultura(clean['cultura'])
         if 'sistema' in clean and clean['sistema'] in ['sequeiro', 'irrigado']:
@@ -209,7 +181,6 @@ def processar_lote(file):
             historico_soja = True
         if 'prnt' in clean and clean['prnt'] is not None:
             prnt = float(clean['prnt'])
-
         analise = AnaliseSolo(
             ph_h2o=clean.get('ph_h2o', 0),
             p_melich=clean.get('p', 0) or clean.get('fosforo', 0),
@@ -227,9 +198,7 @@ def processar_lote(file):
             fe=clean.get('fe', None),
             s=clean.get('s', None),
         )
-
-        recomendacao = recomendar_tudo(analise, cultura, sistema, produtividade, historico_soja, prnt)
-
+        recomendacao = recomendar_tudo(analise, cultura, sistema, produtividade, historico_soja, prnt=prnt)
         rec_dict = {
             'Amostra': idx + 1,
             'pH': analise.ph_h2o,
@@ -251,22 +220,14 @@ def processar_lote(file):
                 rec_dict[f'{elem} classe'] = classificar_micronutriente(valor, elem)
                 if elem in recomendacao.micronutrientes:
                     rec_dict[f'{elem} dose (kg/ha)'] = recomendacao.micronutrientes[elem]
-
         resultados.append(rec_dict)
-
     df_resultados = pd.DataFrame(resultados)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df_resultados.to_excel(writer, sheet_name='Recomendações', index=False)
     output.seek(0)
-
-    return send_file(
-        output,
-        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        as_attachment=True,
-        download_name='recomendacoes_lote.xlsx'
-    )
-
+    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                     as_attachment=True, download_name='recomendacoes_lote.xlsx')
 
 def to_float(value, default=0.0):
     if value in (None, ''):
@@ -276,41 +237,30 @@ def to_float(value, default=0.0):
     except:
         return default
 
-
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        # =========================
-        # UPLOAD DE ARQUIVO - duas ações
-        # =========================
         if 'arquivo' in request.files:
             file = request.files['arquivo']
             if file and allowed_file(file.filename):
-                # Verifica qual botão foi clicado
-                if 'preencher' in request.form:  # Botão "Enviar e preencher"
+                if 'preencher' in request.form:
                     try:
                         dados_upload = parse_upload_first_line(file)
-                        return render_template(
-                            'index.html',
-                            dados=dados_upload,
-                            calcular=False
-                        )
+                        return render_template('index.html', dados=dados_upload, calcular=False)
                     except Exception as e:
+                        logger.exception("Erro no upload")
                         flash(f'Erro ao processar arquivo: {e}', 'danger')
                         return redirect(url_for('index'))
-                elif 'processar_lote' in request.form:  # Botão "Processar lote"
+                elif 'processar_lote' in request.form:
                     try:
                         return processar_lote(file)
                     except Exception as e:
+                        logger.exception("Erro no processamento de lote")
                         flash(f'Erro ao processar lote: {e}', 'danger')
                         return redirect(url_for('index'))
             else:
                 flash('Tipo de arquivo não permitido. Use CSV ou Excel.', 'warning')
                 return redirect(url_for('index'))
-
-        # =========================
-        # FORMULÁRIO MANUAL (uma amostra)
-        # =========================
         try:
             ph_h2o = to_float(request.form.get('ph_h2o'))
             p = to_float(request.form.get('p'))
@@ -321,31 +271,27 @@ def index():
             h_al = to_float(request.form.get('h_al'))
             mo = to_float(request.form.get('mo'))
             argila = to_float(request.form.get('argila'))
-
             zn = to_float(request.form.get('zn'), None) if request.form.get('zn') else None
             cu = to_float(request.form.get('cu'), None) if request.form.get('cu') else None
             b = to_float(request.form.get('b'), None) if request.form.get('b') else None
             mn = to_float(request.form.get('mn'), None) if request.form.get('mn') else None
             fe = to_float(request.form.get('fe'), None) if request.form.get('fe') else None
             s = to_float(request.form.get('s'), None) if request.form.get('s') else None
-
             cultura_value = request.form.get('cultura')
             sistema_value = request.form.get('sistema')
-
             if not cultura_value or not sistema_value:
                 flash("Selecione cultura e sistema.", "warning")
                 return redirect(url_for('index'))
-
             cultura = Cultura(cultura_value)
             sistema = Sistema(sistema_value)
-
-            produtividade = to_float(request.form.get('produtividade'))
+            produtividade = to_float(request.form.get('produtividade'), 9)
             prnt = to_float(request.form.get('prnt'), 100)
             area = to_float(request.form.get('area'), 1)
             espacamento = to_float(request.form.get('espacamento'), 0.8)
-
             historico_soja = 'historico_soja' in request.form
-
+            # Captura tipo de pastagem e plantio direto (se vierem do formulário)
+            tipo_pastagem = request.form.get('tipo_pastagem', 'padrao')
+            plantio_direto = 'plantio_direto' in request.form
             analise = AnaliseSolo(
                 ph_h2o=ph_h2o,
                 p_melich=p,
@@ -363,16 +309,10 @@ def index():
                 fe=fe,
                 s=s,
             )
-
             recomendacao = recomendar_tudo(
-                analise,
-                cultura,
-                sistema,
-                produtividade,
-                historico_soja,
-                prnt
+                analise, cultura, sistema, produtividade, historico_soja,
+                plantio_direto_primeiros_anos=plantio_direto, prnt=prnt, tipo_pastagem=tipo_pastagem
             )
-
             classes = {
                 'pH': interpretar_ph(analise.ph_h2o),
                 'P': classificar_p(analise.p_melich, analise.argila),
@@ -382,18 +322,14 @@ def index():
                 'Al': 'Baixo' if analise.al < 0.2 else ('Médio' if analise.al < 0.5 else 'Alto'),
                 'MO': 'Baixo' if analise.mo < 20 else ('Médio' if analise.mo < 40 else 'Alto'),
             }
-
             for elem in ['Zn', 'Cu', 'B', 'Mn', 'Fe', 'S']:
                 valor = getattr(analise, elem.lower())
                 if valor is not None:
                     classes[elem] = classificar_micronutriente(valor, elem)
-
             ureia_kg = (recomendacao.n_kg_ha / 0.45) if recomendacao.n_kg_ha else 0
             map_kg = (recomendacao.p2o5_kg_ha / 0.48) if recomendacao.p2o5_kg_ha else 0
             kcl_kg = (recomendacao.k2o_kg_ha / 0.60) if recomendacao.k2o_kg_ha else 0
-
             area_250m = (250 * espacamento) / 10000
-
             fert = {
                 'ureia_kg_ha': round(ureia_kg, 1),
                 'map_kg_ha': round(map_kg, 1),
@@ -405,35 +341,20 @@ def index():
                 'map_250m': round(map_kg * area_250m, 2),
                 'kcl_250m': round(kcl_kg * area_250m, 2),
             }
-
-            return render_template(
-                'index.html',
-                dados=request.form,
-                analise=analise,
-                cultura=cultura,
-                sistema=sistema,
-                produtividade=produtividade,
-                historico_soja=historico_soja,
-                prnt=prnt,
-                area=area,
-                espacamento=espacamento,
-                recomendacao=recomendacao,
-                classes=classes,
-                fert=fert,
-                calcular=True
-            )
-
+            return render_template('index.html', dados=request.form, analise=analise, cultura=cultura,
+                                   sistema=sistema, produtividade=produtividade, historico_soja=historico_soja,
+                                   prnt=prnt, area=area, espacamento=espacamento, recomendacao=recomendacao,
+                                   classes=classes, fert=fert, calcular=True)
         except Exception as e:
-            return f"ERRO REAL: {e}"
-
+            logger.exception("Erro no processamento do formulário")
+            flash(f'Erro nos dados do formulário: {str(e)}', 'danger')
+            return redirect(url_for('index'))
     return render_template('index.html', calcular=False, dados={})
-
 
 @app.route('/download_excel')
 def download_excel():
     try:
         args = request.args
-
         analise = AnaliseSolo(
             ph_h2o=to_float(args.get('ph_h2o')),
             p_melich=to_float(args.get('p')),
@@ -451,33 +372,23 @@ def download_excel():
             fe=to_float(args.get('fe'), None) if args.get('fe') else None,
             s=to_float(args.get('s'), None) if args.get('s') else None,
         )
-
         cultura = Cultura(args.get('cultura'))
         sistema = Sistema(args.get('sistema'))
         produtividade = to_float(args.get('produtividade'))
         historico_soja = args.get('historico_soja') == 'True'
         prnt = to_float(args.get('prnt'), 100)
-
-        recomendacao = recomendar_tudo(analise, cultura, sistema, produtividade, historico_soja, prnt)
-
+        recomendacao = recomendar_tudo(analise, cultura, sistema, produtividade, historico_soja, prnt=prnt)
         excel_bytes = gerar_excel_bytes(analise, recomendacao, cultura, sistema, produtividade, historico_soja)
-
-        return send_file(
-            io.BytesIO(excel_bytes),
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            as_attachment=True,
-            download_name='recomendacao.xlsx'
-        )
-
+        return send_file(io.BytesIO(excel_bytes), mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                         as_attachment=True, download_name='recomendacao.xlsx')
     except Exception as e:
+        logger.exception("Erro ao gerar Excel")
         return f"Erro ao gerar Excel: {e}", 400
-
 
 @app.route('/gerar_pdf')
 def gerar_pdf():
     try:
         args = request.args
-
         analise = AnaliseSolo(
             ph_h2o=to_float(args.get('ph_h2o')),
             p_melich=to_float(args.get('p')),
@@ -495,7 +406,6 @@ def gerar_pdf():
             fe=to_float(args.get('fe'), None) if args.get('fe') else None,
             s=to_float(args.get('s'), None) if args.get('s') else None,
         )
-
         cultura = Cultura(args.get('cultura'))
         sistema = Sistema(args.get('sistema'))
         produtividade = to_float(args.get('produtividade'))
@@ -503,10 +413,7 @@ def gerar_pdf():
         prnt = to_float(args.get('prnt'), 100)
         area = to_float(args.get('area'), 1)
         espacamento = to_float(args.get('espacamento'), 0.8)
-
-        recomendacao = recomendar_tudo(analise, cultura, sistema, produtividade, historico_soja, prnt)
-
-        # Classificações
+        recomendacao = recomendar_tudo(analise, cultura, sistema, produtividade, historico_soja, prnt=prnt)
         classes = {
             'pH': interpretar_ph(analise.ph_h2o),
             'P': classificar_p(analise.p_melich, analise.argila),
@@ -520,12 +427,9 @@ def gerar_pdf():
             valor = getattr(analise, elem.lower())
             if valor is not None:
                 classes[elem] = classificar_micronutriente(valor, elem)
-
-        # Fertilizantes
         ureia_kg = (recomendacao.n_kg_ha / 0.45) if recomendacao.n_kg_ha else 0
         map_kg = (recomendacao.p2o5_kg_ha / 0.48) if recomendacao.p2o5_kg_ha else 0
         kcl_kg = (recomendacao.k2o_kg_ha / 0.60) if recomendacao.k2o_kg_ha else 0
-
         fert = {
             'ureia_kg_ha': round(ureia_kg, 1),
             'map_kg_ha': round(map_kg, 1),
@@ -534,36 +438,91 @@ def gerar_pdf():
             'map_total': round(map_kg * area, 1),
             'kcl_total': round(kcl_kg * area, 1),
         }
-
-        # Renderiza o template do relatório
-        html = render_template(
-            'relatorio_pdf.html',
-            analise=analise,
-            cultura=cultura,
-            sistema=sistema,
-            produtividade=produtividade,
-            historico_soja=historico_soja,
-            prnt=prnt,
-            area=area,
-            espacamento=espacamento,
-            recomendacao=recomendacao,
-            classes=classes,
-            fert=fert,
-            now=datetime.now()
-        )
-
+        html = render_template('relatorio_pdf.html', analise=analise, cultura=cultura, sistema=sistema,
+                               produtividade=produtividade, historico_soja=historico_soja, prnt=prnt,
+                               area=area, espacamento=espacamento, recomendacao=recomendacao,
+                               classes=classes, fert=fert, now=datetime.now())
         pdf = HTML(string=html).write_pdf()
-
-        return send_file(
-            io.BytesIO(pdf),
-            mimetype='application/pdf',
-            as_attachment=True,
-            download_name='relatorio_tecnico.pdf'
-        )
-
+        return send_file(io.BytesIO(pdf), mimetype='application/pdf', as_attachment=True,
+                         download_name='relatorio_tecnico.pdf')
     except Exception as e:
+        logger.exception("Erro ao gerar PDF")
         return f"Erro ao gerar PDF: {e}", 400
 
+@app.route('/formulacao', methods=['GET', 'POST'])
+def formulacao():
+    resultado = None
+    if request.method == 'POST':
+        try:
+            teores = {
+                'ureia': config.FERTILIZANTES['Ureia']['N'] / 100,
+                'map_n': config.FERTILIZANTES['MAP']['N'] / 100,
+                'map_p2o5': config.FERTILIZANTES['MAP']['P2O5'] / 100,
+                'kcl': config.FERTILIZANTES['KCl']['K2O'] / 100,
+            }
+            if 'calcular_quantidades' in request.form:
+                n_necessario = to_float(request.form.get('n_necessario'))
+                p2o5_necessario = to_float(request.form.get('p2o5_necessario'))
+                k2o_necessario = to_float(request.form.get('k2o_necessario'))
+                formula = request.form.get('formula', '').strip()
+                if formula:
+                    partes = formula.replace('%', '').split('-')
+                    if len(partes) == 3:
+                        n_necessario = float(partes[0]) * 10
+                        p2o5_necessario = float(partes[1]) * 10
+                        k2o_necessario = float(partes[2]) * 10
+                    else:
+                        flash('Formato de fórmula inválido. Use N-P2O5-K2O (ex: 08-28-16)', 'danger')
+                        return redirect(url_for('formulacao'))
+                if n_necessario is None or p2o5_necessario is None or k2o_necessario is None:
+                    flash('Preencha a fórmula ou os valores de N, P2O5 e K2O.', 'danger')
+                    return redirect(url_for('formulacao'))
+                map_kg = p2o5_necessario / teores['map_p2o5'] if p2o5_necessario else 0
+                kcl_kg = k2o_necessario / teores['kcl'] if k2o_necessario else 0
+                n_fornecido_map = map_kg * teores['map_n']
+                n_restante = max(0, n_necessario - n_fornecido_map)
+                ureia_kg = n_restante / teores['ureia'] if n_restante else 0
+                resultado = {
+                    'modo': 'quantidades',
+                    'ureia_kg': round(ureia_kg, 2),
+                    'map_kg': round(map_kg, 2),
+                    'kcl_kg': round(kcl_kg, 2),
+                    'n_total': round(n_fornecido_map + ureia_kg * teores['ureia'], 2),
+                    'p2o5_total': round(map_kg * teores['map_p2o5'], 2),
+                    'k2o_total': round(kcl_kg * teores['kcl'], 2),
+                }
+            elif 'calcular_formula' in request.form:
+                ureia_kg = to_float(request.form.get('ureia_kg'))
+                map_kg = to_float(request.form.get('map_kg'))
+                kcl_kg = to_float(request.form.get('kcl_kg'))
+                if ureia_kg == 0 and map_kg == 0 and kcl_kg == 0:
+                    flash('Pelo menos um fertilizante deve ter quantidade > 0.', 'danger')
+                    return redirect(url_for('formulacao'))
+                n_total = ureia_kg * teores['ureia'] + map_kg * teores['map_n']
+                p2o5_total = map_kg * teores['map_p2o5']
+                k2o_total = kcl_kg * teores['kcl']
+                massa_total = ureia_kg + map_kg + kcl_kg
+                n_perc = (n_total / massa_total) * 100
+                p_perc = (p2o5_total / massa_total) * 100
+                k_perc = (k2o_total / massa_total) * 100
+                resultado = {
+                    'modo': 'formula',
+                    'n_perc': round(n_perc, 2),
+                    'p_perc': round(p_perc, 2),
+                    'k_perc': round(k_perc, 2),
+                    'n_total': round(n_total, 2),
+                    'p2o5_total': round(p2o5_total, 2),
+                    'k2o_total': round(k2o_total, 2),
+                    'massa_total': round(massa_total, 2),
+                    'ureia_kg': round(ureia_kg, 2),
+                    'map_kg': round(map_kg, 2),
+                    'kcl_kg': round(kcl_kg, 2),
+                }
+        except Exception as e:
+            logger.exception("Erro na formulação")
+            flash(f'Erro no cálculo: {e}', 'danger')
+            return redirect(url_for('formulacao'))
+    return render_template('formulacao.html', resultado=resultado)
 
 if __name__ == '__main__':
     app.run(debug=True)

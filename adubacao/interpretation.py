@@ -1,4 +1,3 @@
-# adubacao/interpretation.py
 from . import config
 
 def classificar_p(p: float, argila: float) -> str:
@@ -10,22 +9,35 @@ def classificar_p(p: float, argila: float) -> str:
                 return "Baixo"
             elif p <= me:
                 return "Médio"
-            else:
-                return "Adequado"
-    return "Argila fora da faixa"
-
-def classificar_k(k: float, ctc: float) -> str:
-    for (ctc_min, ctc_max, baixo_max, medio_max, adequado_max, _) in config.LIMITES_K:
-        if ctc_min <= ctc < ctc_max:
-            if k <= baixo_max:
-                return "Baixo"
-            elif k <= medio_max:
-                return "Médio"
-            elif k <= adequado_max:
+            elif p <= ad:
                 return "Adequado"
             else:
                 return "Alto"
-    return "CTC fora da faixa"
+    return "Argila fora da faixa"
+
+def classificar_k(k: float, ctc: float) -> str:
+    """
+    Classifica o potássio conforme a Tabela 5 do manual.
+    Retorna a classe (Baixo, Médio, Adequado, Alto).
+    """
+    if ctc < 4.0:
+        if k <= 15:
+            return "Baixo"
+        elif k <= 30:
+            return "Médio"
+        elif k <= 40:
+            return "Adequado"
+        else:
+            return "Alto"
+    else:  # CTC >= 4.0
+        if k <= 25:
+            return "Baixo"
+        elif k <= 50:
+            return "Médio"
+        elif k <= 80:
+            return "Adequado"
+        else:
+            return "Alto"
 
 def classificar_micronutriente(valor: float, elemento: str) -> str:
     limites = config.LIMITES_MICRO.get(elemento)
