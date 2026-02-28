@@ -80,7 +80,7 @@ MG_MINIMO_RECOMENDADO = 0.5
 # EXTRAÇÃO E EXPORTAÇÃO DE NUTRIENTES
 # ============================================
 EXPORTACAO_K2O = {
-    'milho': 6.0,
+    'milho': 3.4,
     'soja': 20.0,
     'feijao': 14.0,
     'arroz': 3.0,
